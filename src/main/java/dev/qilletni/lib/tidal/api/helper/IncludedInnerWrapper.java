@@ -26,4 +26,11 @@ public class IncludedInnerWrapper {
                 .filter(innerClass::isInstance)
                 .map(innerClass::cast);
     }
+
+    @Override
+    public String toString() {
+        return "IncludedInnerWrapper{" +
+                "includedInners=" + includedInners +
+                '}';
+    }
 }

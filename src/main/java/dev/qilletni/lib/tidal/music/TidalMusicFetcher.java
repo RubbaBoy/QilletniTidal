@@ -429,7 +429,7 @@ public class TidalMusicFetcher implements MusicFetcher {
 
             var artistsResourceObject = response.body().getData();
 
-            return createArtistEntity(artistsResourceObject);
+            return Optional.of(createArtistEntity(artistsResourceObject));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -500,7 +500,7 @@ public class TidalMusicFetcher implements MusicFetcher {
         return Optional.of(new TidalPlaylist(playlistData.getId(), playlistData.getAttributes().getName(), createUserEntity(firstOwner), playlistData.getAttributes().getNumberOfItems()));
     }
 
-    private User createUserEntity(UsersResourceObject user) {
+    private TidalUser createUserEntity(UsersResourceObject user) {
         // TODO: See Qilletni issue #11
         return new TidalUser(user.getId(), user.getAttributes().getUsername());
     }
@@ -516,7 +516,7 @@ public class TidalMusicFetcher implements MusicFetcher {
 
         var artists = ModelHelper.collectIncludeInners(includedInnerWrapper, albumData.getRelationships().getArtists().getData(), ArtistsResourceObject.class);
 
-        return Optional.of(new TidalAlbum(albumData.getId(), albumData.getAttributes().getTitle(), artists.stream().map(this::createArtistEntityStub).toList()));
+        return Optional.of(new TidalAlbum(albumData.getId(), albumData.getAttributes().getTitle(), artists.stream().map(this::createArtistEntity).toList()));
     }
 
     private List<Track> createAlbumTrackList(TidalAlbum album, @Nullable AlbumsItemsMultiRelationshipDataDocument albumItems) {
@@ -552,16 +552,6 @@ public class TidalMusicFetcher implements MusicFetcher {
                 .map(Optional::get)
                 .map(item -> {
                     return (Track) new TidalTrackStub(item.getId());
-//                    var artistData = item.getRelationships().getArtists().getData();
-//                    var albumData = item.getRelationships().getAlbums().getData();
-//                    LOGGER.debug("track title = {}", item.getAttributes().getTitle());
-//                    return (Track) new TidalTrack(
-//                            item.getId(),
-//                            item.getAttributes().getTitle(),
-//                            artistData.stream().map(this::createArtistEntityStub).toList(),
-//                            new TidalAlbumStub(albumData.getFirst().getId()),
-//                            DurationConverter.parseDurationToSeconds(item.getAttributes().getDuration())
-//                    );
                 }).toList();
     }
 
@@ -569,12 +559,33 @@ public class TidalMusicFetcher implements MusicFetcher {
         var includedInnerWrapper = new IncludedInnerWrapper(included);
 
         return tracks.stream()
-                .map(item -> includedInnerWrapper.getInner(item.getId(), TracksResourceObject.class))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
                 .map(item -> {
-                    var artistData = item.getRelationships().getArtists().getData();
-                    var albumData = item.getRelationships().getAlbums().getData();
+                    var artistData = item.getRelationships().getArtists().getData().stream()
+                            .map(resource -> {
+                                var innerOptional = includedInnerWrapper.getInner(resource.getId(), ArtistsResourceObject.class);
+                                if (innerOptional.isEmpty()) {
+                                    LOGGER.warn("Artist resource not included in IncludedInner list: ID {}", resource.getId());
+                                }
+
+                                return innerOptional;
+                            })
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .toList();
+
+                    var albumData = item.getRelationships().getAlbums().getData().stream()
+                            .map(resource -> {
+                                var innerOptional = includedInnerWrapper.getInner(resource.getId(), AlbumsResourceObject.class);
+                                if (innerOptional.isEmpty()) {
+                                    LOGGER.warn("Album resource not included in IncludedInner list: ID {}", resource.getId());
+                                }
+
+                                return innerOptional;
+                            })
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .toList();
+
                     LOGGER.debug("track title = {}", item.getAttributes().getTitle());
                     return (Track) new TidalTrack(
                             item.getId(),
@@ -586,8 +597,8 @@ public class TidalMusicFetcher implements MusicFetcher {
                 }).toList();
     }
 
-    private Optional<Artist> createArtistEntity(ArtistsResourceObject artist) {
-        return Optional.of(new TidalArtist(artist.getId(), artist.getAttributes().getName()));
+    private TidalArtist createArtistEntity(ArtistsResourceObject artist) {
+        return new TidalArtist(artist.getId(), artist.getAttributes().getName());
     }
 
     private TidalArtist createArtistEntityStub(ResourceIdentifier artistIdentifier) {

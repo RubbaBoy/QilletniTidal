@@ -15,6 +15,14 @@
 
         <property name="hbm2ddl.auto">update</property>
 
+
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalAlbum"/>
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalArtist"/>
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalPlaylist"/>
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalPlaylistIndex"/>
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalTrack"/>
+        <mapping class="dev.qilletni.lib.tidal.music.entities.TidalUser"/>
+
 <!--        <mapping class="dev.qilletni.lib.lastfm.music.entities.LastFmTrack"/>-->
 <!--        <mapping class="dev.qilletni.lib.lastfm.music.entities.LastFmAlbum"/>-->
     </session-factory>

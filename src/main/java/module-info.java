@@ -14,7 +14,7 @@ module qilletni.lib.tidal.main {
     requires retrofit2;
     requires kotlinx.coroutines.core;
     requires java.naming;
-    requires qilletni.lib.tidal.main;
+    requires java.sql;
 
     provides dev.qilletni.api.auth.ServiceProvider
             with TidalServiceProvider;
