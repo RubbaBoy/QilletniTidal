@@ -59,7 +59,7 @@ public class TidalServiceProvider implements ServiceProvider {
             musicCache = new TidalMusicCache(musicFetcher);
             playActor = new DefaultRoutablePlayActor(new ConsolePlayActor());
             trackOrchestrator = defaultTrackOrchestratorFunction.apply(playActor, musicCache);
-            musicTypeConverter = new TidalMusicTypeConverter();
+            musicTypeConverter = new TidalMusicTypeConverter(musicCache);
 
             serviceProviderInstance = this;
         });

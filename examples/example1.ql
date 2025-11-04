@@ -1,10 +1,11 @@
 import "tidal:tidal.ql"
 
+provider "spotify"
+
+song godKnows = "God Knows" by "Knocked Loose"
+
+printf("Spotify song ID: %s", [godKnows.getId()])
+
 provider "tidal"
 
-collection demo = "Demo Playlist" collection by "rubbaboy"
-
-print(demo.getTrackCount())
-print(demo.getId())
-
-play demo
+printf("Tidal song ID: %s", [godKnows.getId()])
